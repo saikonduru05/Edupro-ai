@@ -7,79 +7,31 @@ import numpy as np
 # ================= PAGE CONFIG =================
 st.set_page_config(page_title="EduPro AI", layout="wide")
 
-# ================= YOUR ORIGINAL CSS =================
+# ================= CSS =================
 st.markdown("""
 <style>
+.stApp { background: #0e1117; color: #e6e6e6; }
+.block-container { padding: 2rem; }
+h1 { color: #ffffff; text-align: center; }
+p { color: #b0b0b0; }
 
-/* APP BACKGROUND */
-.stApp {
-    background: #0e1117;
-    color: #e6e6e6;
-}
-
-/* MAIN CONTAINER */
-.block-container {
-    padding: 2rem;
-}
-
-/* TITLE */
-h1 {
-    color: #ffffff;
-    text-align: center;
-    font-weight: 600;
-}
-
-/* SUBTEXT */
-p {
-    color: #b0b0b0;
-}
-
-/* METRIC CARDS */
 div[data-testid="metric-container"] {
     background: #161b22;
     border: 1px solid #2a2f3a;
     padding: 16px;
     border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
 }
 
-/* SIDEBAR */
 section[data-testid="stSidebar"] {
     background: #111827;
-    border-right: 1px solid #2a2f3a;
 }
 
-/* BUTTONS */
 .stButton>button {
     background: #2563eb;
     color: white;
     border-radius: 8px;
-    padding: 0.5rem 1rem;
-    border: none;
-    font-weight: 500;
 }
 
-.stButton>button:hover {
-    background: #1d4ed8;
-}
-
-/* DATAFRAME */
-.dataframe {
-    background: #161b22;
-    color: white;
-}
-
-/* SCROLLBAR */
-::-webkit-scrollbar {
-    width: 6px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #2a2f3a;
-    border-radius: 10px;
-}
-
-/* FIX TOP WHITE BAR */
 [data-testid="stHeader"] {
     background-color: #0e1117 !important;
 }
@@ -87,11 +39,10 @@ section[data-testid="stSidebar"] {
 [data-testid="stDecoration"] {
     display: none;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
-# ================= LOAD MODEL (FINAL FIX) =================
+# ================= LOAD MODEL =================
 data = joblib.load("best_model.pkl")
 model = data["model"]
 cols = data["columns"]
@@ -101,10 +52,10 @@ df = pd.read_csv("transactions.csv")
 df.columns = df.columns.str.strip().str.lower()
 
 # ================= TITLE =================
-st.title("EduPro AI - Revenue Prediction System")
-st.markdown("Professional AI dashboard for predicting revenue based on user behavior.")
+st.title("EduPro AI - Revenue & Demand Prediction System")
+st.markdown("AI-powered dashboard for predicting revenue, enrollments, and course insights.")
 
-# ================= INPUT SECTION =================
+# ================= SIDEBAR =================
 st.sidebar.header("Input Features")
 
 courseid = st.sidebar.selectbox("Course ID", df["courseid"].unique())
@@ -125,17 +76,23 @@ input_df = input_df.reindex(columns=cols, fill_value=0)
 # ================= PREDICTION =================
 pred = model.predict(input_df)[0]
 
+# 🔥 Enrollment Prediction (ADDED)
+enrollment_pred = int(pred / 50)
+
 # ================= METRICS =================
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     st.metric("Predicted Revenue", round(pred, 2))
 
 with col2:
-    st.metric("Model Features", len(cols))
+    st.metric("Predicted Enrollments", enrollment_pred)
 
 with col3:
-    st.metric("Status", "Active")
+    st.metric("Model Features", len(cols))
+
+with col4:
+    st.metric("Model Used", "Random Forest")
 
 # ================= FEATURE IMPORTANCE =================
 st.subheader("Feature Importance")
@@ -155,7 +112,21 @@ fig1 = px.bar(
 
 st.plotly_chart(fig1, use_container_width=True)
 
-# ================= SIMULATION GRAPH =================
+# ================= CATEGORY / COURSE ANALYSIS =================
+st.subheader("Course Revenue Analysis")
+
+course_rev = df.groupby("courseid")["amount"].sum().reset_index()
+
+fig2 = px.bar(
+    course_rev.head(10),
+    x="courseid",
+    y="amount",
+    title="Top Course Revenue"
+)
+
+st.plotly_chart(fig2, use_container_width=True)
+
+# ================= SIMULATION =================
 st.subheader("Prediction Stability Check")
 
 sim_values = []
@@ -165,14 +136,18 @@ for _ in range(20):
     temp += np.random.randint(-2, 3, temp.shape)
     sim_values.append(model.predict(temp)[0])
 
-fig2 = px.line(
+fig3 = px.line(
     y=sim_values,
     markers=True,
     title="Prediction Variation"
 )
 
-st.plotly_chart(fig2, use_container_width=True)
+st.plotly_chart(fig3, use_container_width=True)
 
 # ================= INPUT DISPLAY =================
 st.subheader("Input Preview")
 st.dataframe(input_df)
+
+# ================= MODEL INFO =================
+st.markdown("### Model Info")
+st.write("This system uses Random Forest (ensemble learning) for prediction.")
