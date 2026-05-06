@@ -7,7 +7,7 @@ import numpy as np
 # ================= PAGE CONFIG =================
 st.set_page_config(page_title="EduPro AI", layout="wide")
 
-# ================= CLEAN PROFESSIONAL CSS =================
+# ================= YOUR ORIGINAL CSS =================
 st.markdown("""
 <style>
 
@@ -79,11 +79,20 @@ section[data-testid="stSidebar"] {
     border-radius: 10px;
 }
 
+/* FIX TOP WHITE BAR */
+[data-testid="stHeader"] {
+    background-color: #0e1117 !important;
+}
+
+[data-testid="stDecoration"] {
+    display: none;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
-# ================= LOAD MODEL =================
-data = joblib.load("models/best_model.pkl")
+# ================= LOAD MODEL (FINAL FIX) =================
+data = joblib.load("best_model.pkl")
 model = data["model"]
 cols = data["columns"]
 
