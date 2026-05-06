@@ -97,7 +97,7 @@ model = data["model"]
 cols = data["columns"]
 
 # ================= LOAD DATA =================
-df = pd.read_csv("data/transactions.csv")
+df = pd.read_csv("transactions.csv")
 df.columns = df.columns.str.strip().str.lower()
 
 # ================= TITLE =================
